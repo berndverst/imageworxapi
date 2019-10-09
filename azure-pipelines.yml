@@ -8,10 +8,10 @@ trigger:
 
 variables:
   # Azure Resource Manager connection created during pipeline creation
-  azureSubscription: $(azureSubscription)
+  azureSubscription: '$(azureSubscription)'
 
   # Function app name
-  functionAppName: $(functionAppName)
+  functionAppName: '$(functionAppName)'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
