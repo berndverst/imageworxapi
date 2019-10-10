@@ -24,22 +24,31 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     records = { 'images': [] }
 
-    for item in body['items']:
-        # sign
-        sign = item['type']
+    try:
+        for item in body['items']:
+            # sign
+            sign = item['type']
 
-        # image bits
-        img = item['image'].replace('data:image/png;base64,', '')
-        stream = BytesIO(base64.b64decode(img))
-        stream.seek(0)
+            # image bits
+            img = item['image'].replace('data:image/png;base64,', '')
+            stream = BytesIO(base64.b64decode(img))
+            stream.seek(0)
 
-        # storage path + save
-        blob_name = f'{base_folder}/{sign}/{str(uuid.uuid4())}.png'
-        blob_service.create_blob_from_stream(storageContainer, blob_name, stream)
+            # storage path + save
+            blob_name = f'{base_folder}/{sign}/{str(uuid.uuid4())}.png'
+            blob_service.create_blob_from_stream(storageContainer, blob_name, stream)
 
-        # return image
-        path = f'{blob_service.protocol}://{blob_service.primary_endpoint}/{storageContainer}/{blob_name}'
-        records['images'].append(path)
+            # return image
+            path = f'{blob_service.protocol}://{blob_service.primary_endpoint}/{storageContainer}/{blob_name}'
+            records['images'].append(path)
+        records['error'] = { }
+    except Exception as error:
+        logging.exception('Python Error')
+        records['error'] = { 
+            'code': '500',
+            'message': f'{type(error).__name__}: {str(error)}',
+            'type': 'Python Error'
+        }
 
     return func.HttpResponse(body=json.dumps(records),
                              headers={ 
