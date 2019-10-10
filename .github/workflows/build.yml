@@ -1,0 +1,26 @@
+name: imageworxapi ci
+
+on: [push]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    # checkout the repo
+    - uses: actions/checkout@master
+    
+    # az login
+    - uses: azure/actions/login@v1
+      with:
+        creds: ${{ secrets.CREDENTIALS }}
+    
+    - name: 'Run Azure Functions Action'
+      uses: Azure/functions-action@v1
+      id: fa
+      with:
+        app-name: ${{ secrets.APP_NAME }}
+        package: '.'
+
+    - name: 'show endpoint'
+      run: |
+        echo "${{ steps.fa.outputs.app-url }}"
