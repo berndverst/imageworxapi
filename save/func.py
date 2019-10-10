@@ -41,9 +41,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         path = f'{blob_service.protocol}://{blob_service.primary_endpoint}/{storageContainer}/{blob_name}'
         records['images'].append(path)
 
-
-    
-
     return func.HttpResponse(body=json.dumps(records),
                              headers={ 
                                  'Content-Type': 'application/json', 
