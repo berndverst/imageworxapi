@@ -40,7 +40,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             # return image
             path = f'{blob_service.protocol}://{blob_service.primary_endpoint}/{storageContainer}/{blob_name}'
-            records['images'].append(path)
+            records['images'].append({'sign': sign, 'path': path })
         records['error'] = { }
     except Exception as error:
         logging.exception('Python Error')
