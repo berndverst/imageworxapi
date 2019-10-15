@@ -7,13 +7,32 @@ import requests
 from PIL import Image
 from io import BytesIO
 from azure.storage.blob import BlockBlobService
+from azure.cognitiveservices.vision.customvision.training import CustomVisionTrainingClient
+from azure.cognitiveservices.vision.customvision.training.models import ImageFileCreateEntry
 
 import azure.functions as func
 
+# for storage in blob
 base_folder = 'gamedata'
 storageAccount = os.environ["StorageAccount"]
 storageAccountKey = os.environ["StorageAccountKey"]
 storageContainer = os.environ["StorageContainer"]
+
+# for pushing to customvision
+trainingKey = os.environ["TrainingKey"]
+apiEndpoint = os.environ["ApiEndpoint"]
+projectId = os.environ["ProjectId"]
+tags = {}
+
+def check_tags(trainer: CustomVisionTrainingClient):
+    t = ['rock', 'paper', 'scissors', 'lizard', 'spock']
+    etags = { t.name: t for t in trainer.get_tags(projectId) }
+    for tag in t:
+        if tag in etags:
+            tags[tag] = etags[tag]
+        else:
+            tags[tag] = trainer.create_tag(projectId, tag)
+
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
@@ -22,7 +41,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     blob_service = BlockBlobService(account_name=storageAccount, account_key=storageAccountKey)
 
+    # prep trainer
+    trainer = CustomVisionTrainingClient(trainingKey, apiEndpoint)
+    #check tags
+    check_tags(trainer)
+
+
     records = { 'images': [] }
+    image_list = []
 
     try:
         for item in body['items']:
@@ -35,13 +61,32 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             stream.seek(0)
 
             # storage path + save
-            blob_name = f'{base_folder}/{sign}/{str(uuid.uuid4())}.png'
+            image_name = f'{str(uuid.uuid4())}.png'
+            blob_name = f'{base_folder}/{sign}/{image_name}'
             blob_service.create_blob_from_stream(storageContainer, blob_name, stream)
+
+            # save to custom vision
+            image_list.append(ImageFileCreateEntry(name=img, contents=base64.b64decode(img), tag_ids=[tags[sign].id]))
+
 
             # return image
             path = f'{blob_service.protocol}://{blob_service.primary_endpoint}/{storageContainer}/{blob_name}'
             records['images'].append({'sign': sign, 'path': path })
-        records['error'] = { }
+
+
+        # save list
+        upload_result = trainer.create_images_from_files(projectId, images=image_list)
+        if not upload_result.is_batch_successful:
+            records['error'] = {
+                'type': 'CustomVision Error',
+                'items': []
+            }
+            for image in upload_result.images:
+                records['error']['items'].append({
+                    image.source_url: image.status
+                })
+        else:
+            records['error'] = { }
     except Exception as error:
         logging.exception('Python Error')
         records['error'] = { 
