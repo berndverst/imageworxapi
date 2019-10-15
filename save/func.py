@@ -56,9 +56,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             sign = item['type']
 
             # image bits
-            img = item['image'].replace('data:image/png;base64,', '')
-            stream = BytesIO(base64.b64decode(img))
-            stream.seek(0)
+            img = base64.b64decode(item['image'].replace('data:image/png;base64,', ''))
+            stream = BytesIO(img)
 
             # storage path + save
             image_name = f'{str(uuid.uuid4())}.png'
@@ -66,7 +65,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             blob_service.create_blob_from_stream(storageContainer, blob_name, stream)
 
             # save to custom vision
-            image_list.append(ImageFileCreateEntry(name=img, contents=base64.b64decode(img), tag_ids=[tags[sign].id]))
+            image_list.append(ImageFileCreateEntry(name=image_name, contents=img, tag_ids=[tags[sign].id]))
 
 
             # return image
