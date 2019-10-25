@@ -95,7 +95,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         }
 
     return func.HttpResponse(body=json.dumps(records),
-                             headers={ 
-                                 'Content-Type': 'application/json', 
+                             headers={ 'Content-Type': 'application/json', 
                                 'Access-Control-Allow-Origin': '*', 
                                 'Access-Control-Allow-Credentials': 'true' })
