@@ -33,7 +33,6 @@ def check_tags(trainer: CustomVisionTrainingClient):
         else:
             tags[tag] = trainer.create_tag(projectId, tag)
 
-
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
@@ -45,7 +44,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     trainer = CustomVisionTrainingClient(trainingKey, apiEndpoint)
     #check tags
     check_tags(trainer)
-
 
     records = { 'images': [] }
     image_list = []
@@ -71,7 +69,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             # return image
             path = f'{blob_service.protocol}://{blob_service.primary_endpoint}/{storageContainer}/{blob_name}'
             records['images'].append({'sign': sign, 'path': path })
-
 
         # save list
         upload_result = trainer.create_images_from_files(projectId, images=image_list)
