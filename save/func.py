@@ -24,7 +24,7 @@ apiEndpoint = os.environ["ApiEndpoint"]
 projectId = os.environ["ProjectId"]
 tags = {}
 
-def check_tags(trainer: CustomVisionTrainingClient):
+def check_tags(trainer: CustomVisionTrainingClient) -> None:
     t = ['none', 'rock', 'paper', 'scissors', 'lizard', 'spock']
     etags = { t.name: t for t in trainer.get_tags(projectId) }
     for tag in t:
@@ -35,6 +35,14 @@ def check_tags(trainer: CustomVisionTrainingClient):
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
+
+    logging.info(f'Method: {req.method}')
+    if req.method == "OPTIONS":
+        return func.HttpResponse(status_code=204,                             
+                             headers={ 
+                                 'Access-Control-Allow-Headers': 'content-type',
+                                 'Access-Control-Allow-Methods': 'POST',
+                                 'Access-Control-Allow-Origin': '*' })
 
     body = req.get_json()
 
@@ -91,7 +99,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             'type': 'Python Error'
         }
 
+
     return func.HttpResponse(body=json.dumps(records),
-                             headers={ 'Content-Type': 'application/json', 
-                                'Access-Control-Allow-Origin': '*', 
-                                'Access-Control-Allow-Credentials': 'true' })
+                             status_code=200,                             
+                             headers={ 'Content-Type': 'application/json',
+                                'Access-Control-Allow-Origin': '*' })
