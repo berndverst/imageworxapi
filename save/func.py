@@ -42,6 +42,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                              headers={ 
                                  'Access-Control-Allow-Headers': 'content-type',
                                  'Access-Control-Allow-Methods': 'POST',
+                                 'Access-Control-Max-Age': '180',
                                  'Access-Control-Allow-Origin': '*' })
 
     body = req.get_json()
