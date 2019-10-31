@@ -59,7 +59,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         for item in body['items']:
             # sign
-            sign = item['type']
+            sign = item['type'].strip()
 
             # image bits
             img = base64.b64decode(item['image'].replace('data:image/png;base64,', ''))
@@ -67,8 +67,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
             # storage path + save
             image_name = f'{str(uuid.uuid4())}.png'
-            blob_name = f'{base_folder}/{sign}/{image_name}'
-            blob_service.create_blob_from_stream(storageContainer, blob_name, stream)
+            blob_name = f'{base_folder}/{sign}/{image_name}'            
+            sresponse = blob_service.create_blob_from_stream(storageContainer, blob_name, stream)
+
+            logging.info(f'Storage Response: {sresponse}')
 
             # save to custom vision
             image_list.append(ImageFileCreateEntry(name=image_name, contents=img, tag_ids=[tags[sign].id]))
